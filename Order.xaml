@@ -1,0 +1,82 @@
+﻿<UserControl x:Class="Resto.Front.Api.TestPlugin.Order" x:Name="Self"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+             xmlns:orders="clr-namespace:Resto.Front.Api.Data.Orders;assembly=Resto.Front.Api.V8"
+             mc:Ignorable="d"
+             HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MinHeight="300" MinWidth="550">
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*" />
+            <ColumnDefinition Width="3*" />
+        </Grid.ColumnDefinitions>
+        <GroupBox Header="Заказ" FontWeight="Bold" FontSize="14" Grid.Column="0" Margin="5">
+            <ListBox Name="OrderList"/>
+        </GroupBox>
+        <StackPanel Grid.Column="1" Margin="10" VerticalAlignment="Top" HorizontalAlignment="Left">
+            <TextBlock Text="Поиск блюда (артикул или название)" Margin="0,0,0,5"/>
+
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                <ComboBox Name="SearchBox"
+              Width="200"
+              Margin="0,0,10,0"
+              IsEditable="True"
+              IsTextSearchEnabled="False"
+              StaysOpenOnEdit="True"
+              Loaded="SearchBox_Loaded"
+              SelectionChanged="SearchBox_SelectionChanged"/>
+                <!--<Button Content="Добавить товар" Width="120" Click="AddProductButton_Click"/>-->
+            </StackPanel>
+            <TextBlock Text="Выбрать оплату" Margin="0,0,0,5"/>
+            <ComboBox Name="PaymentComboBox" Width="200" Height="30" Margin="0,0,0,10">
+                
+            </ComboBox>
+            <TextBlock Text="Кол-во заказов" Margin="0,10,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,10" VerticalAlignment="Center">
+                <TextBox Name="OrderCountBox" Width="100" Height="25" Margin="0,0,10,0"
+             PreviewTextInput="NumericOnly"
+             TextChanged="LimitTo10"/>
+                <Button x:Name="btn_rndOrd" Content="Случайное количество" Width="150" Height="25" Margin="0,0,10,0"
+            Click="btn_rndOrd_Click"/>
+                <CheckBox Name="chk_AutoOrd" Content="" VerticalAlignment="Center"
+              Checked="chk_AutoOrd_Checked" Unchecked="chk_AutoOrd_Unchecked"
+              Tag="OrderCountBox"/>
+            </StackPanel>
+
+            <!-- Номер стола -->
+            <TextBlock Text="Номер стола" Margin="0,10,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,10" VerticalAlignment="Center">
+                <TextBox Name="TableNumberBox" Width="100" Height="25" Margin="0,0,10,0"
+             PreviewTextInput="NumericOnly"
+             TextChanged="LimitTo30"/>
+                <Button x:Name="btn_rndNmbTbl" Content="Случайный номер стола" Width="150" Height="25" Margin="0,0,10,0"
+            Click="btn_rndNmbTbl_Click"/>
+                <CheckBox Name="chk_AutoTbl" Content="" VerticalAlignment="Center"
+              Checked="chk_AutoTbl_Checked" Unchecked="chk_AutoTbl_Unchecked"
+              Tag="TableNumberBox"/>
+            </StackPanel>
+
+            <!-- Кол-во гостей -->
+            <TextBlock Text="Кол-во гостей" Margin="0,10,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,10" VerticalAlignment="Center">
+                <TextBox Name="GuestCountBox" Width="100" Height="25" Margin="0,0,10,0"
+             PreviewTextInput="NumericOnly"
+             TextChanged="LimitTo999"/>
+                <Button x:Name="btn_rndGuests" Content="Случайное кол-во гостей" Width="150" Height="25" Margin="0,0,10,0"
+            Click="btn_rndGuests_Click"/>
+                <CheckBox Name="chk_AutoGuests" Content="" VerticalAlignment="Center"
+              Checked="chk_AutoGuests_Checked" Unchecked="chk_AutoGuests_Unchecked"
+              Tag="GuestCountBox"/>
+            </StackPanel>
+            <Button x:Name="btn_crt" Content="Создать заказы" Width="200" Height="40"
+                    Background="LightGreen" FontWeight="Bold" Click="btn_crt_Click"/>
+        </StackPanel>
+    </Grid>
+    <!--<Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="50"/>
+        </Grid.RowDefinitions>
+        <Frame Margin="10" Background="Azure" x:Name="MainFrame"/>-->
+</UserControl>

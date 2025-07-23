@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Профиль 1": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Program Files\\iiko\\iikoRMS\\Front.Net\\Resto.Front.Api.Host.exe",
+      "commandLineArgs": "/a=\"C:\\Users\\Eduardo\\source\\repos\\Resto.Front.Api.TestPlugin\\bin\\Debug\\net472\\Resto.Front.Api.TestPlugin.dll\"\r\n/c=\"Resto.Front.Api.TestPlugin.TestPlugin\"\r\n/m=21005108\r\n/l=\"C:\\Users\\Eduardo\\AppData\\Roaming\\iiko\\CashServer\\Logs\\plugin-TestPlugin.log\""
+    }
+  }
+}
