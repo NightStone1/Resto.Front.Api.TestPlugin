@@ -31,11 +31,9 @@ namespace Resto.Front.Api.TestPlugin
             {
                
             //Operations.AddButtonToPluginsMenu("TestPlugin: Message button", x => x.vm.ShowOkPopup("Test", "Message shown from Test plugin.")),
-
-            Operations.AddButtonToPluginsMenu("TestPlugin: Открыть плагин WPF", _ => TestPlugin.OpenWPF()),
-            
-            Operations.AddButtonToPluginsMenu("TestPlugin: Test receipt printer", x => Print(x.printer)),
-            Operations.AddButtonToPluginsMenu("TestPlugin: Show list view", x => ShowListPopup(x.vm)),
+            Operations.AddButtonToPluginsMenu("TestPlugin: Открыть плагин WPF", _ => TestPlugin.OpenWPF()), //new
+            //Operations.AddButtonToPluginsMenu("TestPlugin: Test receipt printer", x => Print(x.printer)),
+            //Operations.AddButtonToPluginsMenu("TestPlugin: Show list view", x => ShowListPopup(x.vm)),
             /*
             Operations.AddButtonToPluginsMenu("TestPlugin: Show list with quantities view", x => ShowListWithQuantitiesPopup(x.vm)),
             Operations.AddButtonToPluginsMenu("TestPlugin: Show keyboard view", x => ShowKeyboardPopup(x.vm)),
@@ -140,33 +138,6 @@ namespace Resto.Front.Api.TestPlugin
             {
                 Doc = new XElement(Tags.Doc, new XElement(Tags.Center, "Test Printer"))
             });
-        }
-
-        private static void OpenWPF()
-        {
-            var thread = new Thread(() =>
-            {
-                if (Application.Current == null)
-                {
-                    var app = new Application();
-                    app.ShutdownMode = ShutdownMode.OnExplicitShutdown;
-                }
-
-                var win = new Window
-                {
-                    Title = "Плагин: Order",
-                    Content = new Order(),  // вложили UserControl внутрь окна
-                    Width = 800,
-                    Height = 600
-                };
-
-                win.Show(); // или win.ShowDialog()
-
-                // чтобы окно не закрыло поток мгновенно:
-                System.Windows.Threading.Dispatcher.Run();
-            });
-            thread.SetApartmentState(ApartmentState.STA);
-            thread.Start();
         }
 
         private static void ShowListPopup(IViewManager viewManager)

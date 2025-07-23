@@ -22,15 +22,13 @@ namespace Resto.Front.Api.TestPlugin
     public sealed class TestPlugin : IFrontPlugin
     {
         private readonly Stack<IDisposable> subscriptions = new Stack<IDisposable>();
-        private static Thread _uiThread;
-        private static Window _windowInstance;
         public TestPlugin()
         {
             PluginContext.Log.Info("Initializing TestPlugin");
             if (Settings.Default.ExtendBillCheque)
                 //subscriptions.Push(new NotificationHandlers.BillChequeExtender());
             subscriptions.Push(new ButtonsTester());
-            OpenWPF();
+            OpenWPF(); //new
             //subscriptions.Push(new EditorTester());
             //ExternalOperationsTester.TestCalculator();
             //subscriptions.Push(new CookingPriority.CookingPriorityManager());
@@ -87,9 +85,9 @@ namespace Resto.Front.Api.TestPlugin
 
             PluginContext.Log.Info("TestPlugin stopped");
         }
-        public static void OpenWPF()
+        public static void OpenWPF() //new
         {
-            WpfWindowManager.Show<Order>();
+            WpfWindowManager.Show<Order>(); //new
         }
     }
 

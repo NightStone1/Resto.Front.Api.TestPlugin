@@ -10,7 +10,7 @@ using System.Windows.Controls;
 
 namespace Resto.Front.Api.TestPlugin.WpfHelpers
 {
-    internal class WpfWindowManager
+    internal class WpfWindowManager //new
     {
         private static Thread _uiThread;
         private static Window _windowInstance;
@@ -61,7 +61,7 @@ namespace Resto.Front.Api.TestPlugin.WpfHelpers
         {
             _windowInstance = new Window
             {
-                Title = "Создать заказ"/*typeof(T).Name*/,
+                Title = "Создать заказ",
                 Content = new T(),
                 Width = 800,
                 Height = 600
