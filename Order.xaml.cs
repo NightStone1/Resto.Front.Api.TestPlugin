@@ -23,6 +23,7 @@ using Resto.Front.Api.Editors.Stubs;
 using Resto.Front.Api.Data.Orders;
 using Resto.Front.Api.Data.Payments;
 using System.Threading;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace Resto.Front.Api.TestPlugin
 {
@@ -66,7 +67,6 @@ namespace Resto.Front.Api.TestPlugin
         }
         private void FilterProductsByOrderList()
         {
-            // Извлекаем артикулы из OrderList (в строке формат "Имя | Артикул")
             var selectedArticles = OrderList.Items.Cast<string>().Select(item =>
                 {
                     var parts = item.Split('|');
@@ -185,14 +185,14 @@ namespace Resto.Front.Api.TestPlugin
                 var guest = editSession.AddOrderGuest("Гость номер: 1", newOrder);
                 if (gC)
                 {
-                    for (int i = 1; i < gCount - 1; i++)
+                    for (int i = 2; i < gCount + 1; i++)
                     {
                         guest = editSession.AddOrderGuest($"Гость номер: {i}", newOrder);
                     }
                 }
                 else
                 {
-                    for (int i = 1; i < Convert.ToInt32(GuestCountBox.Text) - 1; i++)
+                    for (int i = 2; i < Convert.ToInt32(GuestCountBox.Text) + 1; i++)
                     {
                         guest = editSession.AddOrderGuest($"Гость номер: {i}", newOrder);
                     }
@@ -218,20 +218,28 @@ namespace Resto.Front.Api.TestPlugin
                     MessageBox.Show("Ошибка: Не выбран тип оплаты\r" + ex.Message);
                 }
                 var result = PluginContext.Operations.SubmitChanges(editSession);
-                //
-                //Закомментировано по причине исключения 
-                //
-                //try
+                var credentials2 = PluginContext.Operations.AuthenticateByPin("1111");
+                try
+                {
+                    var order = PluginContext.Operations.GetOrders().Last(o => o.Status == OrderStatus.New /*|| o.Status == OrderStatus.Bill*/);
+                    var paymentType = PluginContext.Operations.GetPaymentTypesToPayOutOnUser().First(x => x.Kind == paymentTypeKind);
+                    credentials2 = PluginContext.Operations.AuthenticateByPin("1111");
+                    
+                    PluginContext.Operations.PayOrderAndPayOutOnUser(order, true, paymentType, order.FullSum, credentials2);
+                }
+                catch (PaymentActionFailedException ex)
+                {
+                    PluginContext.Log.Error($"Во время оплаты произошла ошибка: {ex.Details}");
+}
+                catch (Exception ex)
+                {
+                    PluginContext.Log.Error(ex.ToString());
+                }
+                //var order1 = PluginContext.Operations.GetOrders();
+                //foreach (var o in order1) 
                 //{
-                //    var order = PluginContext.Operations.GetOrders().Last(o => o.Status == OrderStatus.New || o.Status == OrderStatus.Bill);
-                //    var paymentType = PluginContext.Operations.GetPaymentTypesToPayOutOnUser().First(x => x.Kind == paymentTypeKind);
-                //    var credentials2 = PluginContext.Operations.GetDefaultCredentials();
-                //    PluginContext.Operations.PayOrderAndPayOutOnUser(order, true, paymentType, order.ResultSum, credentials2);
+                //    PluginContext.Operations.DeleteOrder(o, credentials2);
                 //}
-                //catch (Exception ex)
-                //{
-                //    MessageBox.Show("Скорее всего нет лицензии\r" + ex.Message);
-                //}                
             }
             catch (Exception ex)
             {

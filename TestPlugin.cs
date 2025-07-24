@@ -18,13 +18,14 @@ namespace Resto.Front.Api.TestPlugin
     /// Автоматически не публикуется, для использования скопировать Resto.Front.Api.TestPlugin.dll в Resto.Front.Main\bin\Debug\Plugins\Resto.Front.Api.TestPlugin\
     /// </summary>
     [UsedImplicitly]
-    [PluginLicenseModuleId(21005108)]
+    [PluginLicenseModuleId(21005918)]
     public sealed class TestPlugin : IFrontPlugin
     {
         private readonly Stack<IDisposable> subscriptions = new Stack<IDisposable>();
         public TestPlugin()
         {
             PluginContext.Log.Info("Initializing TestPlugin");
+
             if (Settings.Default.ExtendBillCheque)
                 //subscriptions.Push(new NotificationHandlers.BillChequeExtender());
             subscriptions.Push(new ButtonsTester());
