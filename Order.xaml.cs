@@ -24,6 +24,7 @@ using Resto.Front.Api.Data.Orders;
 using Resto.Front.Api.Data.Payments;
 using System.Threading;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
+using Resto.Front.Api.Extensions;
 
 namespace Resto.Front.Api.TestPlugin
 {
@@ -46,8 +47,7 @@ namespace Resto.Front.Api.TestPlugin
         };
         private List<IProduct> ProductForOrder = new List<IProduct>
         {
-        };
-       
+        };       
         public Order()
         {
             InitializeComponent();
@@ -75,7 +75,7 @@ namespace Resto.Front.Api.TestPlugin
             ProductForOrder = ProductForOrder.Where(product => selectedArticles.Contains(product.Number)).ToList();
         }
         private void GetAll()
-        {            
+        {
             var paymentsType = PluginContext.Operations.GetPaymentTypes();
             foreach (var paymentType in paymentsType)
             {
@@ -160,92 +160,123 @@ namespace Resto.Front.Api.TestPlugin
         {
             try
             {
+                // Фильтрация продуктов
                 FilterProductsByOrderList();
-                var sections = PluginContext.Operations.GetRestaurantSections().Where(s => s.Tables != null && s.Tables.Count != 0);
-                List<ITable> tables = new List<ITable>();
-                foreach (var section in sections)
-                {
-                    foreach (var table in section.Tables.OrderBy(t => t.Number))
-                    {
-                        tables.Add(table);
-                    }
-                }
-                var credentials1 = PluginContext.Operations.GetDefaultCredentials();
+                // Получаем столы из секций ресторана
+                var tables = GetAvailableTables();
+                // Создание сессии редактирования и заказа
                 var editSession = PluginContext.Operations.CreateEditSession();
-                INewOrderStub newOrder;
-                if (tC)
-                {
-                    newOrder = editSession.CreateOrder(tables.Where(s => s.Number == tCount).ToList());
-                }
-                else
-                {
-                    newOrder = editSession.CreateOrder(tables.Where(s => s.Number == Convert.ToInt32(TableNumberBox.Text)).ToList());
-                }
+                var selectedTables = GetSelectedTables(tables);
+                var newOrder = editSession.CreateOrder(selectedTables);
+                // Установка источника заказа
                 editSession.ChangeOrderOriginName("Test Plugin", newOrder);
-                var guest = editSession.AddOrderGuest("Гость номер: 1", newOrder);
-                if (gC)
-                {
-                    for (int i = 2; i < gCount + 1; i++)
-                    {
-                        guest = editSession.AddOrderGuest($"Гость номер: {i}", newOrder);
-                    }
-                }
-                else
-                {
-                    for (int i = 2; i < Convert.ToInt32(GuestCountBox.Text) + 1; i++)
-                    {
-                        guest = editSession.AddOrderGuest($"Гость номер: {i}", newOrder);
-                    }
-                }
-                foreach (var product in ProductForOrder)
-                {
-                    editSession.AddOrderProductItem(random.Next(1, 10), product, newOrder, guest, null);
-                }
-                PaymentTypeKind paymentTypeKind = new PaymentTypeKind();
-                try
-                {
-                    if (PaymentComboBox.SelectedItem.ToString() == "Наличные")
-                    {
-                        paymentTypeKind = PaymentTypeKind.Cash;
-                    }
-                    else if (PaymentComboBox.SelectedItem.ToString() == "Банковские карты")
-                    {
-                        paymentTypeKind = PaymentTypeKind.Card;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Ошибка: Не выбран тип оплаты\r" + ex.Message);
-                }
-                var result = PluginContext.Operations.SubmitChanges(editSession);
-                var credentials2 = PluginContext.Operations.AuthenticateByPin("1111");
-                try
-                {
-                    var order = PluginContext.Operations.GetOrders().Last(o => o.Status == OrderStatus.New /*|| o.Status == OrderStatus.Bill*/);
-                    var paymentType = PluginContext.Operations.GetPaymentTypesToPayOutOnUser().First(x => x.Kind == paymentTypeKind);
-                    credentials2 = PluginContext.Operations.AuthenticateByPin("1111");
-                    
-                    PluginContext.Operations.PayOrderAndPayOutOnUser(order, true, paymentType, order.FullSum, credentials2);
-                }
-                catch (PaymentActionFailedException ex)
-                {
-                    PluginContext.Log.Error($"Во время оплаты произошла ошибка: {ex.Details}");
-                }
-                catch (Exception ex)
-                {
-                    PluginContext.Log.Error(ex.ToString());
-                }
-                //var order1 = PluginContext.Operations.GetOrders();
-                //foreach (var o in order1) 
-                //{
-                //    PluginContext.Operations.DeleteOrder(o, credentials2);
-                //}
+                // Добавление гостей
+                IOrderGuestItemStub lastGuest = AddGuestsToOrder(editSession, newOrder);
+                // Добавление товаров
+                AddProductsToOrder(editSession, newOrder, lastGuest);
+                // Определение типа оплаты
+                var paymentType = GetSelectedPaymentType();
+                if (paymentType == null) return;
+                // Применение изменений
+                PluginContext.Operations.SubmitChanges(editSession);
+                // Оплата заказа
+                PayOrder(paymentType);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Общая ошибка создания заказа. Проверьте поля\r" + ex.Message);
+                MessageBox.Show("Общая ошибка создания заказа. Проверьте поля\r\n" + ex.Message);
             }
         }
+        private List<ITable> GetAvailableTables()
+        {
+            return PluginContext.Operations.GetRestaurantSections().Where(s => s.Tables?.Any() == true).SelectMany(s => s.Tables).OrderBy(t => t.Number).ToList();
+        }
+
+        private List<ITable> GetSelectedTables(List<ITable> tables)
+        {
+            int tableNumber = tC ? tCount : Convert.ToInt32(TableNumberBox.Text);
+            return tables.Where(t => t.Number == tableNumber).ToList();
+        }
+        private IOrderGuestItemStub AddGuestsToOrder(IEditSession editSession, INewOrderStub order)
+        {
+            int guestCount = gC ? gCount : Convert.ToInt32(GuestCountBox.Text);
+            IOrderGuestItemStub lastGuest = editSession.AddOrderGuest("Гость номер: 1", order);
+
+            for (int i = 2; i <= guestCount; i++)
+            {
+                lastGuest = editSession.AddOrderGuest($"Гость номер: {i}", order);
+            }
+            return lastGuest;
+        }
+        private void AddProductsToOrder(IEditSession editSession, INewOrderStub order, IOrderGuestItemStub lastGuest)
+        {
+            foreach (var product in ProductForOrder)
+            {
+                editSession.AddOrderProductItem(random.Next(1, 10), product, order, lastGuest, null);
+            }
+        }
+        private IPaymentType GetSelectedPaymentType()
+        {
+            if (PaymentComboBox.SelectedItem == null)
+            {
+                MessageBox.Show("Не выбран тип оплаты");
+                return null;
+            }
+            string selectedText = PaymentComboBox.SelectedItem.ToString();
+            try
+            {
+                PaymentTypeKind paymentTypeKind;
+                switch (selectedText)
+                {
+                    case "Наличные":
+                        paymentTypeKind = PaymentTypeKind.Cash;
+                        return PluginContext.Operations.GetPaymentTypes().FirstOrDefault(x => x.Kind == paymentTypeKind);
+
+                    case "Банковские карты":
+                        paymentTypeKind = PaymentTypeKind.Card;
+                        return PluginContext.Operations.GetPaymentTypesToPayOutOnUser().FirstOrDefault(x => x.Kind == paymentTypeKind);
+
+                    default:
+                        MessageBox.Show("Неизвестный способ оплаты: " + selectedText);
+                        return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка при определении типа оплаты:\r\n" + ex.Message);
+                return null;
+            }
+        }
+
+        private void PayOrder(IPaymentType paymentType)
+        {
+            try
+            {
+                var credentials = PluginContext.Operations.AuthenticateByPin("1111");
+                var order = PluginContext.Operations.GetOrders().Last(o => o.Status == OrderStatus.New);
+                string selectedText = PaymentComboBox.SelectedItem.ToString();
+
+                if (selectedText == "Наличные")
+                {
+                    PluginContext.Operations.AddPaymentItem(order.FullSum, null, paymentType, order, PluginContext.Operations.GetDefaultCredentials());
+                    PluginContext.Operations.PayOrder(order, true, credentials);
+                }
+                else if (selectedText == "Банковские карты")
+                {
+                    PluginContext.Operations.PayOrderAndPayOutOnUser(order, true, paymentType, order.ResultSum, credentials);
+                }
+            }
+            catch (PaymentActionFailedException ex)
+            {
+                PluginContext.Log.Error($"Во время оплаты произошла ошибка: {ex.Details}");
+            }
+            catch (Exception ex)
+            {
+                PluginContext.Log.Error(ex.ToString());
+            }
+        }
+
+
         private void btn_rndNmbTbl_Click(object sender, RoutedEventArgs e)
         {
             tCount = random.Next(1, 30);
