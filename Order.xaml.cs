@@ -230,7 +230,7 @@ namespace Resto.Front.Api.TestPlugin
                 catch (PaymentActionFailedException ex)
                 {
                     PluginContext.Log.Error($"Во время оплаты произошла ошибка: {ex.Details}");
-}
+                }
                 catch (Exception ex)
                 {
                     PluginContext.Log.Error(ex.ToString());
