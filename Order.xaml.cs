@@ -83,7 +83,7 @@ namespace Resto.Front.Api.TestPlugin
             }
             var menu = PluginContext.Operations.GetHierarchicalMenu();
             var rootProducts = menu.Products;
-            var nestedProducts = GetAllProductsRecursively(menu.ProductGroups);
+            var nestedProducts = GetAllProducts();
             Products = GetSimpleProductList();
             ProductForOrder = nestedProducts;
             var allProducts = rootProducts.Concat(nestedProducts).Distinct().ToList();
@@ -92,26 +92,19 @@ namespace Resto.Front.Api.TestPlugin
         private List<Product> GetSimpleProductList()
         {
             var menu = PluginContext.Operations.GetHierarchicalMenu();
-            var products = GetAllProductsRecursively(menu.ProductGroups);
+            var products = GetAllProducts();
             return products.OrderBy(p => p.Name).Select(p => new Product
             {
                 Article = p.Number,
                 Name = p.Name
             }).ToList();
         }
-        public static List<IProduct> GetAllProductsRecursively(IEnumerable<IProductGroup> rootGroups)
+        public static List<IProduct> GetAllProducts()
         {
             var result = new List<IProduct>();
-            var stack = new Stack<IProductGroup>(rootGroups);
-            while (stack.Count > 0)
-            {
-                var group = stack.Pop();
-                var products = PluginContext.Operations.GetChildProductsByProductGroup(group).Where(product => product.Price != 0 && product.Type == ProductType.Dish && product.Scale == null) ;
-                result.AddRange(products);
-                var childGroups = PluginContext.Operations.GetChildGroupsByProductGroup(group);
-                foreach (var child in childGroups)
-                    stack.Push(child);
-            }
+            var products = PluginContext.Operations.GetAllProducts()
+                .Where(product => product.Price > 0 && product.Type == ProductType.Dish && product.Scale == null && product.IsActive) ;
+            result.AddRange(products);
             return result;
         }
         private void SearchBox_Loaded(object sender, RoutedEventArgs e)
