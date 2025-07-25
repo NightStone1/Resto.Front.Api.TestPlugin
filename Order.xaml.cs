@@ -254,18 +254,16 @@ namespace Resto.Front.Api.TestPlugin
         {
             try
             {
-                var credentials = PluginContext.Operations.AuthenticateByPin("1111");
                 var order = PluginContext.Operations.GetOrders().Last(o => o.Status == OrderStatus.New);
                 string selectedText = PaymentComboBox.SelectedItem.ToString();
-
                 if (selectedText == "Наличные")
                 {
                     PluginContext.Operations.AddPaymentItem(order.FullSum, null, paymentType, order, PluginContext.Operations.GetDefaultCredentials());
-                    PluginContext.Operations.PayOrder(order, true, credentials);
+                    PluginContext.Operations.PayOrder(order, true, PluginContext.Operations.GetDefaultCredentials());
                 }
                 else if (selectedText == "Банковские карты")
                 {
-                    PluginContext.Operations.PayOrderAndPayOutOnUser(order, true, paymentType, order.ResultSum, credentials);
+                    PluginContext.Operations.PayOrderAndPayOutOnUser(order, true, paymentType, order.ResultSum, PluginContext.Operations.GetDefaultCredentials());
                 }
             }
             catch (PaymentActionFailedException ex)
