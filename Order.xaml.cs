@@ -301,7 +301,7 @@ namespace Resto.Front.Api.TestPlugin
                     for (int i = 0; i < oCount; i++)
                     {
                         CreateOrder();
-                        Thread.Sleep(333); // Задержка 1 секунда (1000 мс)
+                        Thread.Sleep(333);
                     }
                 }
                 else
@@ -309,6 +309,7 @@ namespace Resto.Front.Api.TestPlugin
                     for (int i = 0; i < Convert.ToInt32(OrderCountBox.Text); i++)
                     {
                         CreateOrder();
+                        Thread.Sleep(333);
                     }
                 }
             }
