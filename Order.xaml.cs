@@ -32,10 +32,10 @@ namespace Resto.Front.Api.TestPlugin
     {
         Random random = new Random();
         int gCount = 1;
-        int tCount = 1;
+        //int tCount = 1;
         int oCount = 1;
         bool gC = false;
-        bool tC = false;
+        //bool tC = false;
         bool oC = false;
         public class Product
         {
@@ -44,6 +44,7 @@ namespace Resto.Front.Api.TestPlugin
         }
         private List<Product> Products = new List<Product>
         {
+
         };
         private List<IProduct> ProductForOrder = new List<IProduct>
         {
@@ -59,10 +60,15 @@ namespace Resto.Front.Api.TestPlugin
                     textBox.TextChanged += SearchBox_TextChanged;
                 }
             };
+            var paymentsType = PluginContext.Operations.GetPaymentTypes();
+            foreach (var paymentType in paymentsType)
+            {
+                PaymentComboBox.Items.Add(paymentType.Name);
+            }
             SearchBox.ItemsSource = Products.Select(p => $"{p.Name} | {p.Article}").ToList();
             GetAll();
             btn_rndGuests.IsEnabled = false;
-            btn_rndNmbTbl.IsEnabled = false;
+            //btn_rndNmbTbl.IsEnabled = false;
             btn_rndOrd.IsEnabled = false;
         }
         private void FilterProductsByOrderList()
@@ -75,15 +81,10 @@ namespace Resto.Front.Api.TestPlugin
             ProductForOrder = ProductForOrder.Where(product => selectedArticles.Contains(product.Number)).ToList();
         }
         private void GetAll()
-        {
-            var paymentsType = PluginContext.Operations.GetPaymentTypes();
-            foreach (var paymentType in paymentsType)
-            {
-                PaymentComboBox.Items.Add(paymentType.Name);
-            }
+        {            
             var menu = PluginContext.Operations.GetHierarchicalMenu();
             var rootProducts = menu.Products;
-            var nestedProducts = GetAllProducts();
+            var nestedProducts = GetAllProductsRecursively();
             Products = GetSimpleProductList();
             ProductForOrder = nestedProducts;
             var allProducts = rootProducts.Concat(nestedProducts).Distinct().ToList();
@@ -92,18 +93,18 @@ namespace Resto.Front.Api.TestPlugin
         private List<Product> GetSimpleProductList()
         {
             var menu = PluginContext.Operations.GetHierarchicalMenu();
-            var products = GetAllProducts();
+            var products = GetAllProductsRecursively();
             return products.OrderBy(p => p.Name).Select(p => new Product
             {
                 Article = p.Number,
                 Name = p.Name
             }).ToList();
         }
-        public static List<IProduct> GetAllProducts()
+        public static List<IProduct> GetAllProductsRecursively()
         {
             var result = new List<IProduct>();
             var products = PluginContext.Operations.GetAllProducts()
-                .Where(product => product.Price > 0 && product.Type == ProductType.Dish && product.Scale == null && product.IsActive) ;
+                .Where(product => product.Price > 0 && product.Type == ProductType.Dish && product.Scale == null && product.IsActive) ;            
             result.AddRange(products);
             return result;
         }
@@ -159,8 +160,8 @@ namespace Resto.Front.Api.TestPlugin
                 var tables = GetAvailableTables();
                 // Создание сессии редактирования и заказа
                 var editSession = PluginContext.Operations.CreateEditSession();
-                var selectedTables = GetSelectedTables(tables);
-                var newOrder = editSession.CreateOrder(selectedTables);
+                //var selectedTables = GetSelectedTables(tables); 
+                var newOrder = editSession.CreateOrder(null);
                 // Установка источника заказа
                 editSession.ChangeOrderOriginName("Test Plugin", newOrder);
                 // Добавление гостей
@@ -185,14 +186,23 @@ namespace Resto.Front.Api.TestPlugin
             return PluginContext.Operations.GetRestaurantSections().Where(s => s.Tables?.Any() == true).SelectMany(s => s.Tables).OrderBy(t => t.Number).ToList();
         }
 
-        private List<ITable> GetSelectedTables(List<ITable> tables)
-        {
-            int tableNumber = tC ? tCount : Convert.ToInt32(TableNumberBox.Text);
-            return tables.Where(t => t.Number == tableNumber).ToList();
-        }
+        //private List<ITable> GetSelectedTables(List<ITable> tables)
+        //{
+        //    int tableNumber = tC ? tCount : Convert.ToInt32(TableNumberBox.Text);
+        //    return tables.Where(t => t.Number == tableNumber).ToList();
+        //}
         private IOrderGuestItemStub AddGuestsToOrder(IEditSession editSession, INewOrderStub order)
         {
-            int guestCount = gC ? gCount : Convert.ToInt32(GuestCountBox.Text);
+            int guestCount;
+            if (gC)
+            {
+                guestCount = gCount;
+            }
+            else if (!int.TryParse(GuestCountBox.Text, out guestCount))
+            {
+                MessageBox.Show("Некорректное число гостей");
+                return null;
+            }
             IOrderGuestItemStub lastGuest = editSession.AddOrderGuest("Гость номер: 1", order);
 
             for (int i = 2; i <= guestCount; i++)
@@ -240,7 +250,6 @@ namespace Resto.Front.Api.TestPlugin
                 return null;
             }
         }
-
         private void PayOrder(IPaymentType paymentType)
         {
             try
@@ -268,13 +277,11 @@ namespace Resto.Front.Api.TestPlugin
                 PluginContext.Log.Error(ex.ToString());
             }
         }
-
-
-        private void btn_rndNmbTbl_Click(object sender, RoutedEventArgs e)
-        {
-            tCount = random.Next(1, 30);
-            TableNumberBox.Text = tCount.ToString();                       
-        }
+        //private void btn_rndNmbTbl_Click(object sender, RoutedEventArgs e)
+        //{
+        //    tCount = random.Next(1, 30);
+        //    TableNumberBox.Text = tCount.ToString();                       
+        //}
         private void btn_rndGuests_Click(object sender, RoutedEventArgs e)
         {
             gCount = random.Next(1, 999);
@@ -289,6 +296,7 @@ namespace Resto.Front.Api.TestPlugin
         {
             try
             {
+                btn_crt.IsEnabled = false;
                 if (oC)
                 {
                     for (int i = 0; i < oCount; i++)
@@ -305,12 +313,15 @@ namespace Resto.Front.Api.TestPlugin
                         Thread.Sleep(333);
                     }
                 }
+                btn_crt.IsEnabled = true;
+                ProductForOrder.Clear();
+                OrderList.Items.Clear();
+                GetAll();
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Общая ошибка создания заказа. Проверьте поля\r" + ex.Message);
-            }
-            
+            }            
         }
         private void NumericOnly(object sender, TextCompositionEventArgs e)
         {
@@ -328,18 +339,18 @@ namespace Resto.Front.Api.TestPlugin
                 }
             }
         }
-        private void LimitTo30(object sender, TextChangedEventArgs e)
-        {
-            var tb = sender as TextBox;
-            if (int.TryParse(tb.Text, out int value))
-            {
-                if (value > 30)
-                {
-                    tb.Text = "30";
-                    tb.CaretIndex = tb.Text.Length;
-                }
-            }
-        }
+        //private void LimitTo30(object sender, TextChangedEventArgs e)
+        //{
+        //    var tb = sender as TextBox;
+        //    if (int.TryParse(tb.Text, out int value))
+        //    {
+        //        if (value > 30)
+        //        {
+        //            tb.Text = "30";
+        //            tb.CaretIndex = tb.Text.Length;
+        //        }
+        //    }
+        //}
         private void LimitTo10(object sender, TextChangedEventArgs e)
         {
             var tb = sender as TextBox;
@@ -366,20 +377,20 @@ namespace Resto.Front.Api.TestPlugin
             oC = false;
             btn_rndOrd.IsEnabled = false;
         }
-        private void chk_AutoTbl_Checked(object sender, RoutedEventArgs e)
-        {
-            TableNumberBox.IsReadOnly = true;
-            TableNumberBox.Background = Brushes.LightGray;
-            tC = true;
-            btn_rndNmbTbl.IsEnabled = true;
-        }
-        private void chk_AutoTbl_Unchecked(object sender, RoutedEventArgs e)
-        {
-            TableNumberBox.IsReadOnly = false;
-            TableNumberBox.Background = Brushes.White;
-            tC = false;
-            btn_rndNmbTbl.IsEnabled = false;
-        }
+        //private void chk_AutoTbl_Checked(object sender, RoutedEventArgs e)
+        //{
+        //    TableNumberBox.IsReadOnly = true;
+        //    TableNumberBox.Background = Brushes.LightGray;
+        //    tC = true;
+        //    btn_rndNmbTbl.IsEnabled = true;
+        //}
+        //private void chk_AutoTbl_Unchecked(object sender, RoutedEventArgs e)
+        //{
+        //    TableNumberBox.IsReadOnly = false;
+        //    TableNumberBox.Background = Brushes.White;
+        //    tC = false;
+        //    btn_rndNmbTbl.IsEnabled = false;
+        //}
         private void chk_AutoGuests_Checked(object sender, RoutedEventArgs e)
         {
             GuestCountBox.IsReadOnly = true;

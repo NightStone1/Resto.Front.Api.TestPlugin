@@ -41,8 +41,9 @@
               Checked="chk_AutoOrd_Checked" Unchecked="chk_AutoOrd_Unchecked"
               Tag="OrderCountBox"/>
             </StackPanel>
-            <TextBlock Text="Номер стола" Margin="0,10,0,5"/>
+            <!--<TextBlock Text="Выбор отделения" Margin="0,10,0,5"/>
             <StackPanel Orientation="Horizontal" Margin="0,0,0,10" VerticalAlignment="Center">
+                <ComboBox x:Name="SelectSection" Width="200" Height="30" Margin="0,0,0,10"/>
                 <TextBox Name="TableNumberBox" Width="100" Height="25" Margin="0,0,10,0"
              PreviewTextInput="NumericOnly"
              TextChanged="LimitTo30"/>
@@ -51,7 +52,7 @@
                 <CheckBox Name="chk_AutoTbl" Content="" VerticalAlignment="Center"
               Checked="chk_AutoTbl_Checked" Unchecked="chk_AutoTbl_Unchecked"
               Tag="TableNumberBox"/>
-            </StackPanel>
+            </StackPanel>-->
             <TextBlock Text="Кол-во гостей" Margin="0,10,0,5"/>
             <StackPanel Orientation="Horizontal" Margin="0,0,0,10" VerticalAlignment="Center">
                 <TextBox Name="GuestCountBox" Width="100" Height="25" Margin="0,0,10,0"
